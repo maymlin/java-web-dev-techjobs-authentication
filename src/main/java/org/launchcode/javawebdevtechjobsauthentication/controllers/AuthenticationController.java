@@ -93,4 +93,38 @@ public class AuthenticationController {
 
         return "login";
     }
+
+    @PostMapping("login")
+    public String processLoginForm(@ModelAttribute @Valid LoginFormDTO loginFormDTO,
+                                   Errors errors, HttpServletRequest request,
+                                   Model model) {
+
+        if (errors.hasErrors()) {
+            displayLoginForm(model);
+        }
+
+        User theUser = userRepository.findByUsername(loginFormDTO.getUsername());
+
+        if (theUser == null) {
+            errors.rejectValue("username", "user.invalid", "The given username does not exist");
+            displayLoginForm(model);
+        }
+
+        String password = loginFormDTO.getPassword();
+
+        if (!theUser.isMatchingPassowrd(password)) {
+            errors.rejectValue("password", "password.invalid", "Invalid password");
+            displayLoginForm(model);
+        }
+
+        setUserInSession(request.getSession(), theUser);
+
+        return "redirect:";
+    }
+
+    @GetMapping("logout")
+    public String logout(HttpServletRequest request) {
+        request.getSession().invalidate();
+        return "redirect:/login";
+    }
 }
